@@ -10,10 +10,24 @@ struct element {
   int units;      //Product units
 };
 
+struct producer_data {
+  int start;
+  int end;
+  queue * circular_buffer;
+};
+
+
+struct consumer_return {
+  int partial_profits;
+	int partial_product_stock [5];
+  };
+
+
 typedef struct queue {
   // Define the struct yourself
-  int param1;
+  int size;
 }queue;
+
 
 queue* queue_init (int size);
 int queue_destroy (queue *q);
