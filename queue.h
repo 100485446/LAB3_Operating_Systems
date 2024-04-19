@@ -3,12 +3,18 @@
 #ifndef HEADER_FILE
 #define HEADER_FILE
 
-
 struct element {
   int product_id; //Product identifier
   int op;         //Operation
   int units;      //Product units
 };
+
+typedef struct queue {
+    struct element* elements;  // Array to hold the elements
+    int size;  // Maximum size of the queue
+    int start;  // Index of the first element
+    int end;  // Index of where the next element will be inserted
+}queue;
 
 struct producer_data {
   int start;
@@ -16,18 +22,10 @@ struct producer_data {
   queue * circular_buffer;
 };
 
-
 struct consumer_return {
   int partial_profits;
 	int partial_product_stock [5];
   };
-
-
-typedef struct queue {
-  // Define the struct yourself
-  int size;
-}queue;
-
 
 queue* queue_init (int size);
 int queue_destroy (queue *q);

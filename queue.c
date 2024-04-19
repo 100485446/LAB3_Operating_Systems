@@ -7,45 +7,43 @@
 #include "queue.h"
 
 //To create a queue
-queue* queue_init(int size)
-{
-
-  queue * q = (queue *)malloc(sizeof(queue));
-
+queue* queue_init(int size){
+  queue* q = malloc(sizeof(queue));
+  q->elements = malloc(size * sizeof(struct element));
+  q->size = size;
+  q->start = 0;
+  q->end = 0;
   return q;
 }
 
-// To Enqueue an element
-int queue_put(queue *q, struct element* x)
-{
-  
+int queue_destroy(queue* q) {
+  free(q->elements);
+  free(q);
   return 0;
 }
 
-// To Dequeue an element.
-struct element* queue_get(queue *q)
-{
-  struct element* element;
-  
-  return element;
-}
-
-//To check queue state
-int queue_empty(queue *q)
-{
-  
+int queue_put(queue* q, struct element* elem) {
+  if (queue_full(q)) {
+    return -1;  // Queue is full
+  }
+  q->elements[q->end] = *elem;
+  q->end = (q->end + 1) % q->size;
   return 0;
 }
 
-int queue_full(queue *q)
-{
-  
-  return 0;
+struct element* queue_get(queue* q) {
+  if (queue_empty(q)) {
+    return NULL;  // Queue is empty
+  }
+  struct element* elem = &q->elements[q->start];
+  q->start = (q->start + 1) % q->size;
+  return elem;
 }
 
-//To destroy the queue and free the resources
-int queue_destroy(queue *q)
-{
+int queue_empty(queue* q) {
+  return q->start == q->end;
+}
 
-  return 0;
+int queue_full(queue* q) {
+  return (q->end + 1) % q->size == q->start;
 }
