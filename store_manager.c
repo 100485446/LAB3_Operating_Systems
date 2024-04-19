@@ -1,3 +1,4 @@
+
 //SSOO-P3 23/24
 
 #include <stdio.h>
@@ -41,8 +42,8 @@ void * producer(void * arg) { /* Producer code */
 
 void * consumer(void * arg) { /* consumer code */
 	queue * circular_buffer = (queue *) arg;
-	int partial_profits = 0;
-	int partial_product_stock [5] = {0};
+	int profits = 0;
+	int product_stock [5] = {0};
 	struct element operation;
 	for (;;){
 		
@@ -53,8 +54,8 @@ void * consumer(void * arg) { /* consumer code */
 			if (all_producers_finished) {
 				pthread_mutex_unlock(&mutex);
 				struct consumer_return * my_return = (struct consumer_return *) malloc(sizeof(struct consumer_return));
-				my_return->partial_profits = partial_profits;
-				memcpy(my_return->partial_product_stock, partial_product_stock, sizeof(partial_product_stock));
+				my_return->partial_profits = profits;
+				memcpy(my_return->partial_product_stock, product_stock, sizeof(product_stock));
                 pthread_exit(my_return);
             }
 			pthread_cond_wait(&non_empty, &mutex);
@@ -65,65 +66,65 @@ void * consumer(void * arg) { /* consumer code */
 		switch (operation.product_id) {
 			// Purchase is op = 0; Sale is op = 1
 			case 1:
-				if (operation.op == 0){
-					partial_profits += 2;
-					partial_product_stock[0] += 1;
+				if (operation.op == 1){
+					profits += 3 * operation.units;
+					product_stock[0] -=  operation.units;
 				}
-				else if (operation.op == 1){
-					partial_profits -= 3;
-					partial_product_stock[0] -= 1;
+				else if (operation.op == 0){
+					profits -= 2 * operation.units;
+					product_stock[0] +=  operation.units;
 				}
 				else {
 					printf("Invalid operation\n");
 				}
 				break;
 			case 2:
-				if (operation.op == 0){
-					partial_profits += 5;
-					partial_product_stock[1] += 1;
+				if (operation.op == 1){
+					profits += 10 * operation.units;
+					product_stock[1] -= operation.units;
 				}
-				else if (operation.op == 1){
-					partial_profits -= 10;
-					partial_product_stock[1] -= 1;
+				else if (operation.op == 0){
+					profits -= 5 * operation.units;
+					product_stock[1] += operation.units;
 				}
 				else {
 					printf("Invalid operation\n");
 				}
 				break;
 			case 3:
-				if (operation.op == 0){
-					partial_profits += 15;
-					partial_product_stock[2] += 1;
+				if (operation.op == 1){
+					profits += 20 * operation.units;
+					product_stock[2] -= operation.units;
 				}
-				else if (operation.op == 1){
-					partial_profits -= 20;
-					partial_product_stock[2] -= 1;
+				else if (operation.op == 0){
+					profits -= 15 * operation.units;
+					product_stock[2] += operation.units;
 				}
 				else {
 					printf("Invalid operation\n");
 				}
 				break;
 			case 4:
-				if (operation.op == 0){
-					partial_profits += 25;
-					partial_product_stock[3] += 1;
+				if (operation.op == 1){
+					profits += 40 * operation.units;
+					product_stock[3] -= operation.units;
 				}
-				else if (operation.op == 1){
-					partial_profits -= 40;
-					partial_product_stock[3] -= 1;
+				else if (operation.op == 0){
+					profits -= 25 * operation.units;
+					product_stock[3] += operation.units;
 				}
 				else {
 					printf("Invalid operation\n");
 				}
 				break;
 			case 5:
-				if (operation.op == 0){
-					partial_profits += 100;
-					partial_product_stock[4] += 1;
+				if (operation.op == 1){
+					profits += 125 * operation.units;
+					product_stock[4] -= operation.units;
 				}
-				else if (operation.op == 1){
-					partial_profits -= 125;
-					partial_product_stock[4] -= 1;
+				else if (operation.op == 0){
+					profits -= 100;
+					product_stock[4] += operation.units;
 				}
 				else {
 					printf("Invalid operation\n");
@@ -132,7 +133,7 @@ void * consumer(void * arg) { /* consumer code */
 			default:
 				printf("Invalid product id\n");
 		}
-
+		printf("%d - %d - %d, profits = %d\n",operation.product_id, operation.op, operation.units, profits);
 		pthread_cond_signal(&non_full); /* buffer is not full */
 		pthread_mutex_unlock(&mutex);
 	}
@@ -294,8 +295,9 @@ int main (int argc, const char * argv[]){
 			// Create a new thread for each producer
 			pthread_create(&producer_threads[i], NULL, producer, (void *) &producers_data[i]);
 		}
+		
 
-		pthread_t * consumer_threads = (pthread_t *) malloc(n_producers * sizeof(pthread_t));
+		pthread_t * consumer_threads = (pthread_t *) malloc(n_consumers * sizeof(pthread_t));
 		if (consumer_threads == NULL) {
    			fprintf(stderr, "Failed to allocate memory for consumer_threads\n");
     		return -1;  
@@ -312,20 +314,21 @@ int main (int argc, const char * argv[]){
 		for (int i = 0; i < n_producers; i++){
 			pthread_join(producer_threads[i], NULL);
 		}
-
+		
 		pthread_mutex_lock(&mutex);
 		all_producers_finished = 1;
 		pthread_cond_broadcast(&non_empty);
 		pthread_mutex_unlock(&mutex);
 
-		struct consumer_return * c_return = (struct consumer_return * ) malloc(n_consumers * sizeof(struct consumer_return));
+		struct consumer_return ** c_return = (struct consumer_return ** ) malloc(n_consumers * sizeof(struct consumer_return*));
 		for (int i = 0; i < n_consumers; i++){
 			pthread_join(consumer_threads[i], (void **) &c_return[i]);
-			printf("partial profits of consumer thread %d: %d\n", i, c_return[i].partial_profits);
-			profits += c_return[i].partial_profits;
+			//printf("partial profits of consumer thread %d: %d\n", i, c_return[i].partial_profits);
+			printf("%d\n", c_return[i]->partial_profits);
+			profits += c_return[i]->partial_profits;
 			for (int j = 0; j < 5; j++){
-				printf("partial product stock of product %d of consumer thread %d: %d\n", j, i, c_return[i].partial_profits);
-				product_stock[j] += c_return[i].partial_product_stock[j];
+			//	printf("partial product stock of product %d of consumer thread %d: %d\n", j, i, c_return[i].partial_profits);
+				product_stock[j] += c_return[i]->partial_product_stock[j];
 			}
 		}
 
