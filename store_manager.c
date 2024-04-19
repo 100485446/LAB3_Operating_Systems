@@ -123,7 +123,7 @@ void * consumer(void * arg) { /* consumer code */
 					product_stock[4] -= operation.units;
 				}
 				else if (operation.op == 0){
-					profits -= 100;
+					profits -= 100 * operation.units;
 					product_stock[4] += operation.units;
 				}
 				else {
@@ -133,11 +133,11 @@ void * consumer(void * arg) { /* consumer code */
 			default:
 				printf("Invalid product id\n");
 		}
-		printf("%d - %d - %d, profits = %d\n",operation.product_id, operation.op, operation.units, profits);
 		pthread_cond_signal(&non_full); /* buffer is not full */
 		pthread_mutex_unlock(&mutex);
 	}
 }
+
 
 int main (int argc, const char * argv[]){
 	// If less than five arguments print an error and return -1
@@ -167,12 +167,6 @@ int main (int argc, const char * argv[]){
 			printf("Error while opening\n");
 			return -1;
 		}
-	
-
-
-
-
-
 
 		char buffer[50];
 		char ch;
@@ -203,12 +197,6 @@ int main (int argc, const char * argv[]){
 			printf("Failed to allocate memory\n");
 			return -1;
 		}
-
-
-
-
-
-
 
 		bytes_read = 0;
 		byte_counter = 0;
@@ -323,8 +311,6 @@ int main (int argc, const char * argv[]){
 		struct consumer_return ** c_return = (struct consumer_return ** ) malloc(n_consumers * sizeof(struct consumer_return*));
 		for (int i = 0; i < n_consumers; i++){
 			pthread_join(consumer_threads[i], (void **) &c_return[i]);
-			//printf("partial profits of consumer thread %d: %d\n", i, c_return[i].partial_profits);
-			printf("%d\n", c_return[i]->partial_profits);
 			profits += c_return[i]->partial_profits;
 			for (int j = 0; j < 5; j++){
 			//	printf("partial product stock of product %d of consumer thread %d: %d\n", j, i, c_return[i].partial_profits);
