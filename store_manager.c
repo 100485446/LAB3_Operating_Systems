@@ -16,7 +16,6 @@
 pthread_mutex_t mutex; /* mutex to access shared buffer */
 pthread_cond_t non_full; /* can we add more elements? */
 pthread_cond_t non_empty; /* can we remove elements? */
-int n_elements; /* number of elements in buffer */
 // Array of pointers to the struct that stores the operations
 struct element * operations; 
 // To check if all producers have finished, it will be used by consumers
